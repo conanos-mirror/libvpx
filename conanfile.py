@@ -13,7 +13,7 @@ class LibVPXConan(ConanFile):
     url = "https://github.com/conanos/libvpx"
     homepage = "https://www.webmproject.org/code"
     license = "BSD"
-    exports = ["LICENSE"]
+    exports = ["LICENSE","vpx.pc.in"]
     generators = "visual_studio", "gcc"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
@@ -53,6 +53,25 @@ class LibVPXConan(ConanFile):
                 for i in ["lib","bin"]:
                     self.copy("*", dst=os.path.join(self.package_folder,i), src=os.path.join(self.build_folder,"..","msvc",i,rplatform))
             self.copy("*", dst=os.path.join(self.package_folder,"licenses"), src=os.path.join(self.build_folder,"..", "msvc","licenses"))
+
+            tools.mkdir(os.path.join(self.package_folder,"lib","pkgconfig"))
+            shutil.copyfile(os.path.join(self.build_folder,"vpx.pc.in"),
+                            os.path.join(self.package_folder,"lib","pkgconfig", "vpx.pc"))
+            replacements = {
+                "@prefix@"          : self.package_folder,
+                "@exec_prefix@"     : "${prefix}/bin",
+                "@libdir@"          : "${prefix}/lib",
+                "@includedir@"      : "${prefix}/include",
+                "@PACKAGE_VERSION@" : self.version,
+                "@LIBM@"            : "",
+                "@THREAD@"          : ""
+            }
+            if self.options.shared:
+                replacements.update({
+                    "-lvpx" : "-lvpxd"
+                })
+            for s, r in replacements.items():
+                tools.replace_in_file(os.path.join(self.package_folder,"lib","pkgconfig", "vpx.pc"),s,r)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
