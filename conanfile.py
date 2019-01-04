@@ -13,7 +13,7 @@ class LibVPXConan(ConanFile):
     url = "https://github.com/conanos/libvpx"
     homepage = "https://www.webmproject.org/code"
     license = "BSD"
-    exports = ["LICENSE","vpx.pc.in"]
+    exports = ["LICENSE","vpx.pc.in","vp8dx.h"]
     generators = "visual_studio", "gcc"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
@@ -72,6 +72,8 @@ class LibVPXConan(ConanFile):
                 })
             for s, r in replacements.items():
                 tools.replace_in_file(os.path.join(self.package_folder,"lib","pkgconfig", "vpx.pc"),s,r)
+
+            shutil.copy2(os.path.join(self.source_folder,"vp8dx.h"), os.path.join(self.package_folder,"include","vpx","vp8dx.h"))
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
